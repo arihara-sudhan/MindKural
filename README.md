@@ -1,3 +1,5 @@
+<img src="https://github.com/arihara-sudhan/MindKural/blob/main/images/img001.jpg?raw=true" alt=""/>
+
 First, 
 > pip3 install -r requirements.txt
 
