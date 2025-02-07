@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Thirukkural for You!</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Open+Sans:ital,wght@0,300..800;1,300..800&display=swap');
+        * {
+            color: white;
+            font-family: "Inter", serif;
+            font-size: 1rem;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: #212121;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            height: 95vh;
+            font-family: "Inter", serif;
+            padding: 1rem;
+            align-items: center;
+        }
+
+        .chat {
+            width: 50%;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            margin-bottom: 4rem;
+            overflow-y: auto;
+            padding-right: 1rem;
+            height: 75vh;
+        }
+
+        .user, .ai {
+            padding: 0.7rem;
+            margin: 0.7rem;
+            border-radius: 1rem;
+            max-width: fit-content;
+            word-wrap: break-word;
+            margin-bottom: 1rem;
+        }
+
+        .user {
+            background-color: #2F2F2F;
+            align-self: flex-end;
+        }
+
+        .ai {
+            background-color: #3F3F3F;
+            align-self: flex-start;
+        }
+
+        input {
+            color: white;
+            background-color: #2F2F2F;
+            border-radius: 0.61rem;
+            border: none;
+            padding: 0.7rem;
+            width: 100%;
+            height: 50%;
+            margin-bottom: 1rem;
+        }
+
+        button {
+            margin-left: 0.41rem;
+            background-color: #006A4E;
+            border: none;
+            margin-bottom: 1rem;
+            border-radius: 0.61rem;
+            padding: 1rem;
+            font-size: 1rem;
+            width: 13%;
+        }
+        button:active {
+            background-color: white;
+            color: #006A4E;
+        }
+        .input-here {
+            width: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        img {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            border: 2px solid #3F3F3F;
+            background-color: #3F3F3F;
+        }
+        .answer {
+            margin-top: 0.5rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="chat" id="chat"></div>
+    <div class="input-here">
+        <input type="text" id="question" placeholder="Ask Thiruvalluvar..." />
+        <button onclick="askQuestion()">Ask</button>
+    </div>
+    <script>
+        const chatBox = document.getElementById('chat');
+        const questionInput = document.getElementById('question');
+        const image = document.createElement('img');
+        image.setAttribute("src", "");
+
+        function appendMessage(content, sender) {
+    const div = document.createElement('div');
+    let innerHTML = "";
+
+    if (sender == "ai") {
+        innerHTML += `<div class="subdiv" style="display: flex; align-items: center; gap: 10px;">` +
+                     `<img src="https://img.freepik.com/premium-vector/tamil-poet-thiruvalluvar-writing-thirukkural_1108340-147.jpg" alt="" class="image" style="width: 50px; height: 50px;"/>` +
+                     `<div class="subdiv2">`;
+
+        const lines = content.split("\n");
+        if (lines.length > 0) {
+            innerHTML += `<h2 class="line1" style="margin: 0;">${lines[0]}</h2>`;
+        }
+        if (lines.length > 1) {
+            innerHTML += `<h2 class="line2" style="margin: 0;">${lines[1]}</h2>`;
+        }
+
+        innerHTML += `</div>`;
+        innerHTML += `</div>`;
+        const answer = content.split("\n").slice(3).join("\n").replace(/\n/g, "<br>");
+        innerHTML += `<div class="content answer">${answer}</div>`;
+
+        if (lines.length > 2) {
+            innerHTML += `<p class="explanation" style="margin-top: 0.5rem;">${lines[2]}</p>`;
+        }
+
+    } else {
+        innerHTML += `<div class="content">${content}</div>`;
+    }
+
+    div.classList.add(sender);
+    div.innerHTML = innerHTML;
+    chatBox.appendChild(div);
+    chatBox.scrollTop = chatBox.scrollHeight;
+}
+
+
+        async function askQuestion() {
+            const question = questionInput.value;
+            if (!question) return;
+
+            appendMessage(`${question}`, 'user');
+            questionInput.value = '';
+
+            const response = await fetch('http://localhost:8000/ask/', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ question: question, chat_history: [] })
+            });
+            const data = await response.json();
+            const fullText = data.answer;
+            const answerStartIndex = fullText.indexOf('Answer:');
+            const answer = answerStartIndex !== -1 
+                ? fullText.substring(answerStartIndex + 7).trim() 
+                : 'No answer available for your query at the moment...';
+            const matches = data.matches || [];
+            if (matches.length === 0) {
+                appendMessage(answer, 'ai');
+            } else {
+                const [line1, line2, ari] = matches[0];
+                appendMessage(`${line1}\n${line2}\n${ari}\n${answer}`, 'ai');
+            }
+        }
+    </script>
+</body>
+</html>
